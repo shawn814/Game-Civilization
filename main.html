@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civilization</title>
+</head>
+<style>
+    @font-face {
+        font-family: treasureMap;
+        src: url(Treasuremap-nRxz0.ttf);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body,
+    html {
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    header {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 250px 1fr;
+        background: url('image/roomScrollBG.jpg');
+        background-size: cover;
+        padding-left: 20px;
+    }
+
+    a {
+        text-decoration: none;
+        color: rgba(165, 108, 42, 0.637);
+        font-family: treasureMap;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    h5 {
+        margin: 0;
+    }
+
+    main {
+        display: flex;
+        height: 100%;
+        flex: 1 1 auto;
+    }
+
+    #map {
+        border: 1px solid #333;
+        width: inherit;
+        height: inherit;
+    }
+
+    #map-wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    #gametime {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid goldenrod;
+        border-radius: 10px;
+        padding: 10px 15px;
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: bold;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+    }
+
+    #gametime img {
+        margin-right: 5px;
+        width: 30px;
+        height: 30px;
+    }
+
+    #gametime img:nth-child(3) {
+        width: 20px;
+        height: 30px;
+    }
+
+    #worldStatus {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        padding: 5px 10px;
+        border: 5px solid goldenrod;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    #worldStatus a {
+        cursor: pointer;
+        padding: 2px 5px;
+
+    }
+
+    #worldStatus a:hover {
+        background-color: grey;
+        color: white;
+    }
+
+    .player {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    #train {
+        background-color: burlywood;
+    }
+
+    .block {
+        width: 20px;
+        height: 20px;
+    }
+
+    section {
+        width: 350px;
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        background: url('image/treasuremap.png') no-repeat;
+        background-position: center center;
+        background-size: 120% 105%;
+    }
+
+    section>div,
+    section article {
+        padding: 10px;
+        overflow: auto;
+    }
+
+    section>div {
+        box-shadow: 0 0 15px #666
+    }
+
+    section article {
+        width: 100%;
+    }
+
+    section article>div {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid: 5px;
+        margin: 5px 0;
+        align-items: center;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    section article>div>div {
+        text-align: center;
+    }
+
+    section article img {
+        border: 2px solid gray;
+        border-radius: 15px;
+        width: 60px;
+        height: 60px;
+    }
+
+    [v-cloak] {
+        display: none;
+    }
+
+    .workerNo {
+        padding-left: 5px;
+        align-items: center;
+    }
+
+    #workers {
+        margin-bottom: 10px;
+    }
+
+    img.thumbnail {
+        width: 35px;
+        height: 35px;
+        border-style: none;
+        top: 20%;
+    }
+
+    .goldps {
+        width: 100px;
+        height: 100px;
+        padding: 5px;
+        position: relative;
+        cursor: default;
+        border-style: none;
+    }
+
+    .goldimg {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        background-blend-mode: multiply;
+        padding-left: 5px;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .goldpsText {
+        position: absolute;
+        top: 80%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding-left: 5px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .gm-style .gm-style-iw-c {
+        background-color: burlywood !important;
+        min-width: 150px;
+        max-height: fit-content;
+        position: absolute;
+        box-sizing: border-box;
+        overflow: hidden;
+        top: 0;
+        left: 0;
+        transform: translate(-50%, -100%);
+        border-radius: 8px;
+        padding: 15px !important;
+        box-shadow: 0 2px 7px 1px rgba(0, 0, 0, 0.3);
+    }
+
+    .gm-style .gm-style-iw-d {
+        background-color: burlywood !important;
+        overflow: hidden !important;
+        scrollbar-track-color: burlywood !important;
+    }
+
+    .gm-style .gm-style-iw-t::after {
+        background: linear-gradient(45deg, burlywood 50%, burlywood 51%, burlywood 100%) !important;
+    }
+
+
+    #training input[type=image] {
+        width: 70px;
+        height: 70px;
+        border: 1px solid gray;
+        border-radius: 5px;
+        margin-right: 5px
+    }
+
+    #training>div>div {
+        display: flex;
+        align-items: center;
+    }
+
+    #training h2 {
+        text-align: center;
+        margin: 5px 0;
+    }
+
+    .buildButton {
+        border: 2px solid gray;
+        box-shadow: 0 0 10px gray;
+        border-radius: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        margin: 10px 0;
+        width: 120px;
+        height: 120px;
+        text-align: center;
+    }
+
+    .buildButton:hover {
+        cursor: pointer;
+    }
+
+    .buildButton input[type=image] {
+        width: 55px;
+        height: 60px;
+    }
+
+    #alert {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30%;
+        height: 200px;
+        border: 1px solid black;
+        text-align: center;
+        background-color: white;
+        color: orange;
+        font-size: 20pt;
+        padding: 20px 10px;
+        font-weight: bold;
+    }
+
+    #alert button {
+        font-size: 15pt;
+        /* margin: 10px; */
+        position: fixed;
+        bottom: 15px;
+
+        transform: translateX(-50%);
+        border: 1px solid black;
+        outline: none;
+        padding: 15px 40px;
+        cursor: pointer;
+    }
+
+    .btn {
+        padding: 10px;
+        font-size: 10pt;
+        outline: none;
+
+    }
+
+    #attack {
+        background-color: red;
+        color: white;
+        outline: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 15pt;
+        font-weight: bolder;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #attack img {
+        width: 50px;
+        height: 40px;
+        margin: 0 10px;
+    }
+
+    .icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    #info-wrap {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #info-wrap h5 {
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    #ownCapital>button {
+        width: 70px;
+    }
+
+    #armyWorker {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50%;
+        height: 500px;
+        border-radius: 20px;
+        text-align: center;
+        /* color: orange; */
+        font-size: 20pt;
+        padding: 30px 20px;
+        font-weight: bold;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 10px;
+        background: url('image/map.png');
+        background-size: 105% 105%;
+        background-position: center center;
+    }
+
+    #armyWorker>div>* {
+        font-size: 10pt;
+    }
+
+    #armyWorker button,
+    #neighbourContinent button {
+        font-size: 16px;
+        padding: 10px 15px;
+        box-shadow: inset 0 0 5px #D2691E;
+        border: 1px solid #D2691E;
+        border-radius: 5px;
+        cursor: pointer;
+        transition-duration: 0.5s;
+    }
+
+    #armyWorker button:hover,
+    #neighbourContinent button:hover {
+        box-shadow: inset 0 0 20px #D2691E;
+    }
+
+    #wrapArmy {
+        display: flex;
+    }
+
+    #infoSelectionList {
+        margin-top: 10px;
+        border-collapse: collapse;
+        display: block;
+
+    }
+
+    .infoSelection {
+        padding: 10px 20px;
+        border: 1px solid black;
+        border-radius: 10px;
+        background-color: red;
+        cursor: pointer;
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .infoSelection:hover {
+        background-color: darkred;
+    }
+
+    .infoSelection img {
+        width: 20px;
+        height: 20px;
+        margin-left: auto;
+    }
+
+    .infoSelection[disabled=disabled] {
+        background-color: #666;
+    }
+
+    .iconB>img {
+        display: block;
+        justify-content: center;
+        border: 1px solid black;
+        border-radius: 15px
+    }
+
+    #myContinent input[type=image],
+    #ownCapital input[type=image] {
+        padding: 10px;
+        border: 1px solid gray;
+        border-radius: 15px;
+        box-shadow: 0 0 10px gray;
+        width: 80px;
+        height: 80px;
+        margin-right: 10px;
+    }
+
+    #myContinent>div,
+    #ownCapital>div {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    #neighbourContinent div {
+        margin: 10px 0;
+    }
+
+    #loading {
+        width: 100%;
+        height: 100%;
+        /* display: flex; */
+
+        flex-direction: column;
+    }
+
+    #loadBackground {
+        width: 100%;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+        background-size: 100%;
+        background-image: url('image/loading.gif');
+    }
+
+    #loadText {
+        width: 50%;
+        font-size: 30pt;
+        position: fixed;
+        text-align: center;
+        display: block;
+        padding: 100px;
+        height: 100px;
+    }
+</style>
+
+<body>
+    <header>
+        <h1><a href="index.html">Civilization</a></h1>
+    </header>
+
+    <div id="loading">
+        <div id="loadBackground"></div>
+        <div id="loadText">Wait for another player</div>
+    </div>
+
+    <main id="app" v-cloak>
+        <div id="map-wrap">
+            <div id="map"></div>
+            <div id="gametime">
+                <img src="image/clock.gif" alt="clock">
+                <span>{{ new Date(gameTime * 1000).toISOString().substr(11, 8) }}</span>
+                <img src="image/coin.gif" alt="gold" style="margin-left: 20px;">
+                <span>{{ totalGold }}G</span>
+            </div>
+            <div id="alert" v-if="alertText != ''">
+                <div>{{alertText}}</div>
+                <button @click="alertText = ''">OK</button>
+            </div>
+            <!-- Adjust the worker, army and  -->
+            <div id="armyWorker" v-if="tempContinent != null">
+                <div>Continent: {{tempContinent.id}}</div>
+                <div id="wrapArmy">
+                    <div v-if="tempContinent.workerCount > 0">
+                        Worker
+                        <div v-for="a of tempContinent.worker">
+                            <img src="image/worker.gif" class="icon">
+                            {{a}} <input type="number" id="war" value="0" :max="a.total">
+                        </div>
+                    </div>
+                    <div v-if="tempContinent.warCount > 0">
+                        Warrior
+                        <div v-for="a of tempContinent.war">
+                            <img src="image/warrWalk.gif" class="icon">
+                            Lvl {{a.level}} <input type="number" :id="'war'+ a.level" value="0" :max="a.total">
+                        </div>
+                    </div>
+                    <div v-if="tempContinent.arcCount > 0">
+                        Archer
+                        <div v-for="a of tempContinent.arc">
+                            <img src="image/archWalk.gif" class="icon">
+                            Lvl {{a.level}} <input type="number" :id="'arc'+a.level" value="0" :max="a.total">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button v-if="!sectionParam.attackable">Move</button>
+                    <button v-if="sectionParam.attackable" @click="launchAttack">Attack</button>
+                    <button @click="tempContinent = null">Cancel</button>
+                </div>
+            </div>
+            <div id="worldStatus">
+                <a @click.prevent="pan(p.id)" class="player" v-for="(p, i) of getPlayer">
+                    <div>Player {{ i + 1 }}:</div>
+                    <div>{{ p.name }}</div>
+                    <div class="block" :style="{ backgroundColor: p.code, border: '1px solid black', margin: '5px' }">
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <section>
+            <div>
+                <!-- Template for continent -->
+                <div id="ownCapital" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div>
+                        {{ agelvl == 1 ? "Stone Age" : agelvl == 2 ? "Bronze Age" : agelvl == 3 ? "Iron Age" : "" }}
+                    </div>
+                    <div>Economy: {{ goldPerSec }}G/s</div>
+                    <!-- Can use getCapital which return capital continent -->
+                    <div>Total Gold Mines: {{ sectionParam.totalGoldMine }}</div>
+                    <div>Total Training Centers: {{ sectionParam.totalTrain }}</div>
+                    <!-- const cost = this.trainCenterLvl == 1 ? 10000 :
+                                this.trainCenterLvl == 2 ? 20000 : 0; -->
+                    <div>Training Center Level: {{trainCenterLvl}}</div>
+                    <button @click="upgrade()" v-if="this.trainCenterLvl < 3 " >Upgrade ({{trainCenterLvl == 1 ? '10000': trainCenterLvl == 2 ? '20000' : '0'}})</button>
+                    <button v-else disabled>MAX</button>
+                    <div>Worker Available: {{ sectionParam.worker }}</div>
+                    <div>Army power: {{sectionParam.power}}</div>
+                    <div>You ruled {{ continent.length }} continent(s)!</div>
+
+                    <p v-if="sectionParam.arcCount > 0"><b>Archer</b></p>
+                    <div v-if="sectionParam.arcCount > 0" style="justify-content: space-around;">
+                        <div class="iconB" v-for="a of sectionParam.arc">
+                            <img src="image/archWalk.gif" class="icon">
+                            Lvl {{a.level}} : {{a.total}}
+                        </div>
+                    </div>
+                    <p v-if="sectionParam.warCount > 0"><b>Warrior</b></p>
+                    <div v-if="sectionParam.warCount > 0" style="justify-content: space-around;">
+                        <div class="iconB" v-for="a of sectionParam.war">
+                            <img src="image/warrWalk.gif" class="icon">
+                            Lvl {{a.level}} : {{a.total}}
+                        </div>
+                    </div>
+
+                    <h4 style="text-align: center" v-if="!sectionParam.trainBuild || !sectionParam.mineBuild">-Building-
+                    </h4>
+
+                    <div v-if="!sectionParam.trainBuild">
+                        <input id="buildTrain" type="image" src="image/army.png" alt="training center"
+                            @click="addTraining(sectionParam.id)">
+                        <label for="buildTrain">
+                            <p>Training Center</p>
+                            <p>Lvl {{trainCenterLvl}}</p>
+                            <p><b>{{ trainCenterLvl == 1 ? '100 gold' : trainCenterLvl == 2 ? '500 gold' : '2000 gold' }}</b>
+                            </p>
+                        </label>
+                    </div>
+
+                    <div v-if="!sectionParam.mineBuild">
+                        <input id="findMine" type="image" src="image/coin.gif" alt="mine" style="padding: 10px 17px"
+                            @click="addMine(sectionParam.id)">
+                        <label for="findMine">
+                            <p>Find Mine</p>
+                            <p><b>{{ continent.filter(c => c.mine).length * 1000 }} gold</b></p>
+                        </label>
+                    </div>
+                    <div v-if="trainUp!=0">
+                        The total is {{ trainUp }} coins.
+                        <button>Confirm</button>
+                        <button>Cancel</button>
+                    </div>
+                </div>
+
+                <div id="opponentCapital" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div>
+                        {{ agelvl == 1 ? "Stone Age" : agelvl == 2 ? "Bronze Age" : agelvl == 3 ? "Iron Age" : "" }}
+                    </div>
+                    <div>Owner: {{ sectionParam.player }}</div>
+                    <div>Total Army Power: {{ sectionParam.power }}</div>
+                    <div id="infoSelectionList" v-if="sectionParam.attackable">
+                        <div class="infoSelection" @click="getAttackerInfo(p.id,p.power)" v-for="p of sectionParam.own"
+                            :disabled="p.power <= 0">
+                            Continent : {{p.id}} -> {{p.power}}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="myContinent" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div>Army power: {{sectionParam.power}}</div>
+                    <div>Gold per Second: {{sectionParam.goldSecond}}</div>
+                    <div>Worker: {{sectionParam.worker}}</div>
+                    <p v-if="sectionParam.arcCount > 0"><b>Archer</b></p>
+                    <div v-if="sectionParam.arcCount > 0" style="justify-content: space-around;">
+                        <div class="iconB" v-for="a of sectionParam.arc">
+                            <img src="image/archWalk.gif" class="icon">
+                            Lvl {{a.level}} : {{a.total}}
+                        </div>
+                    </div>
+                    <p v-if="sectionParam.warCount > 0"><b>Warrior</b></p>
+                    <div v-if="sectionParam.warCount > 0" style="justify-content: space-around;">
+                        <div class="iconB" v-for="a of sectionParam.war">
+                            <img src="image/warrWalk.gif" class="icon">
+                            Lvl {{a.level}} : {{a.total}}
+                        </div>
+                    </div>
+
+                    <h4 style="text-align: center" v-if="!sectionParam.trainBuild || !sectionParam.mineBuild">-Building-
+                    </h4>
+
+                    <div v-if="!sectionParam.trainBuild">
+                        <input id="buildTrain" type="image" src="image/army.png" alt="training center"
+                            @click="addTraining(sectionParam.id)">
+                        <label for="buildTrain">
+                            <p>Training Center</p>
+                            <p>Lvl {{trainCenterLvl}}</p>
+                            <p><b>{{ trainCenterLvl == 1 ? '100 gold' : trainCenterLvl == 2 ? '500 gold' : '2000 gold' }}</b>
+                            </p>
+                        </label>
+                    </div>
+
+                    <div v-if="!sectionParam.mineBuild">
+                        <input id="findMine" type="image" src="image/coin.gif" alt="mine" style="padding: 10px 17px"
+                            @click="addMine(sectionParam.id)">
+                        <label for="findMine">
+                            <p>Find Mine</p>
+                            <p><b>{{ continent.filter(c => c.mine).length * 1000 }} gold</b></p>
+                        </label>
+                    </div>
+
+                </div>
+
+                <div id="opponentContinent" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div>Army Power: {{ sectionParam.power }}</div>
+                    <div>Owner: {{ sectionParam.player }}</div>
+                    <div id="infoSelectionList" v-if="sectionParam.attackable">
+                        <button class="infoSelection" @click="getAttackerInfo(p.id,p.power)"
+                            v-for="p of sectionParam.own" :disabled="p.power <= 0">
+                            <p>Continent: <b>{{p.id}}</b> [{{p.power}}]</p>
+                            <img src="image/attack.png" alt="attack">
+                        </button>
+                    </div>
+                </div>
+
+                <div id="neighbourContinent" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div>Unknow region</div>
+                    <div>Explore and conquer ?</div>
+                    <button @click="addContinent(sectionParam.id)">5000 Gold</button>
+                </div>
+
+                <div id="emptyContinent" hidden>
+                    <h3 style="text-align: center;">-Continent: {{sectionParam.id}}-</h3>
+                    <div style="text-align: center; font-size: 16px;">Please come near to explore this area</div>
+                </div>
+            </div>
+            <article></article>
+        </section>
+
+        <!-- Info Window template -->
+        <div hidden>
+            <form id="training">
+                <h2>-Training Center Level: {{tempInfo.level}}-</h2>
+                <div id="info-wrap">
+                    <h4><b>Warrior</b></h4>
+                    <div>
+                        <div v-if="tempInfo.level >=1">
+                            <input type="image" src="image/warrWalk.gif" alt="war level 1"
+                                @click.prevent="trainArmy(tempInfo.id, 'war1')">
+                            <h5>lvl 1</h5>
+                        </div>
+                        <div v-if="tempInfo.level >=2">
+                            <input type="image" src="image/warrWalk.gif" alt="war level 2"
+                                @click.prevent="trainArmy(tempInfo.id, 'war2')">
+                            <h5>lvl 2</h5>
+                        </div>
+                        <div v-if="tempInfo.level >=3">
+                            <input type="image" src="image/warrWalk.gif" alt="war level 3"
+                                @click.prevent="trainArmy(tempInfo.id, 'war3')">
+                            <h5>lvl 3</h5>
+                        </div>
+                    </div>
+
+                    <h4><b>Acrher</b></h4>
+                    <div>
+                        <div v-if="tempInfo.level >=1">
+                            <input type="image" src="image/archWalk.gif" alt="arch level 1"
+                                @click.prevent="trainArmy(tempInfo.id, 'arc1')">
+                            <h5>lvl 1</h5>
+                        </div>
+                        <div v-if="tempInfo.level >=2">
+                            <input type="image" src="image/archWalk.gif" alt="arch level 2"
+                                @click.prevent="trainArmy(tempInfo.id, 'arc2')">
+                            <h5>lvl 2</h5>
+                        </div>
+                        <div v-if="tempInfo.level >=3">
+                            <input type="image" src="image/archWalk.gif" alt="arch level 3"
+                                @click.prevent="trainArmy(tempInfo.id, 'arc3')">
+                            <h5>lvl 3</h5>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div hidden>
+            <form id="capital">
+                <h2 style="text-align: center; margin-top: 0;">-
+                    {{ agelvl == 1 ? "Stone Age" : agelvl == 2 ? "Bronze Age" : agelvl == 3 ? "Iron Age" : "" }} -</h2>
+                <label for="newWorkers">Workers: </label>
+                <select id="newWorkers">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+                <button @click.prevent="trainWorker()">Train!</button>
+            </form>
+        </div>
+
+        <div hidden>
+            <form id="mine" @submit.prevent="save">
+                <div v-for="(con, i) in continent" v-if="i == tempInfo">
+                    <div class="workerNo">
+                        <img src="image/leftArrow.png" class="thumbnail" @click="addMineWorker(tempInfo, -1)"
+                            style="padding-top: 10px;">
+                        <input id="workers" type="number" min="0" max="5" v-model="con.mine.worker"
+                            style="text-align: center;">
+                        <img src="image/rightArrow.png" class="thumbnail" @click="addMineWorker(tempInfo, +1)"
+                            style="padding-top: 10px;">
+                    </div>
+                    <div class="goldps">
+                        <img src="image/coinbag.png" class="goldimg">
+                        <div class="goldpsText">{{ con.mine.worker * 10 }}</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=&libraries=geometry,drawing"></script>
+
+    <script src="js/jquery.slim.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="js/vuefire.js"></script>
+    <script src="js/vue-router.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        $('main').hide();
+        $('header').hide();
+        let popi = null;
+        let app;
+        const gm = google.maps;
+        const continentInfo = new gm.InfoWindow();
+
+        firebase.initializeApp({
+            projectId: 'civilazation-443d8',
+            apiKey: 'AIzaSyCpn9D8vKxJMZOZ-PsoI5KIJ1oFxpYkRmg',
+            databaseURL: "https://civilazation-443d8.firebaseio.com/"
+        });
+
+        Vue.use(Vuefire.firestorePlugin);
+        Vue.use(Vuefire.rtdbPlugin);
+
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+                const ref = firebase.firestore().collection('map'); // firestore
+                const users = firebase.firestore().collection('users');
+                const instance = firebase.firestore().collection('instance');
+
+                const urlParams = new URLSearchParams(window.location.search);
+
+                const roomid = urlParams.get("id") ?? "";
+
+                const realdb = firebase.database().ref(`/game/instance/${roomid}`); // realtime db
+
+                let temp = null;
+                app = new Vue({
+                    el: '#app',
+                    data: {
+                        gameStart: false,
+                        alertText: '',
+                        tempId: null,
+                        tempInfo: {},
+                        tempContinent: null,
+                        tempArmy: {},
+                        users: [],
+                        gameTime: 0,
+                        shapes: [],
+                        mines: [],      /*Gold Mine Markers*/
+                        trains: [],     /*Training Centre Markers*/
+                        starMarker: [],
+                        warMarker: [],  /*War marker*/
+                        warLine: [],     /*War line*/
+                        totalGold: 99999,    /**/
+                        goldPerSec: 0,
+                        trainUp: 0,
+                        agelvl: 1,
+                        trainCenterLvl: 1,    /* Upgrade train Center*/
+                        color: [],
+                        war: [],
+                        continent: [],
+                        sectionParam: {}
+                    },
+                    firestore: {
+                        users: users
+                    },
+                    firebase: {
+                        instance: realdb
+                    },
+                    watch: {
+                        gameTime() {
+                            this.totalGold += this.goldPerSec;
+                            this.goldPerSec = 0;
+                            $('section article').html('');
+                            this.continent.forEach((c, cindex, cobject) => {
+                                if (c.queue && c.queue.length > 0) {
+                                    $('section article').append(`<div>Continent: ${c.id}</div>`);
+                                    let firstQueue = false;
+                                    c.queue.forEach((q, qindex, qobject) => {
+                                        if (!firstQueue) {
+                                            if (q.type == 'worker') {
+                                                if (q.time > 0) q.time -= 1;
+                                                else {
+                                                    c.worker += q.quantity;
+                                                    qobject.splice(qindex, 1);
+                                                }
+                                            }
+                                            else if (q.type == 'war') {
+                                                if (q.time > 0) q.time -= 1;
+                                                else {
+                                                    if (c.army.war) {
+                                                        let p = c.army.war.find(a => a.level == q.level);
+                                                        if (p) p.total += q.quantity;
+                                                        else c.army.war.push({ level: q.level, total: q.quantity });
+                                                        updatePowerInfo(c.id);
+                                                        qobject.splice(qindex, 1);
+                                                    } else {
+                                                        c.army.war = [{ level: q.level, total: q.quantity }];
+                                                        updatePowerInfo(c.id);
+                                                        qobject.splice(qindex, 1);
+                                                    }
+                                                }
+                                            }
+                                            else if (q.type == 'arc') {
+                                                if (q.time > 0) q.time -= 1;
+                                                else {
+                                                    if (c.army.arc) {
+                                                        let p = c.army.arc.find(a => a.level == q.level);
+                                                        if (p) p.total += q.quantity;
+                                                        else c.army.arc.push({ level: q.level, total: q.quantity });
+                                                        updatePowerInfo(c.id);
+                                                        qobject.splice(qindex, 1);
+                                                    } else {
+                                                        c.army.arc = [{ level: q.level, total: q.quantity }];
+                                                        updatePowerInfo(c.id);
+                                                        qobject.splice(qindex, 1);
+                                                    }
+                                                }
+                                            }
+                                            firstQueue = true;
+                                        }
+
+                                        $('section article').append(`
+                                            <div>
+                                                <div>
+                                                    <img title="${q.level == 1 ? 'level 1' : q.level == 2 ? 'level 2' : q.level == 3 ? 'level 3' : ''}"
+                                                     src='image/${q.type == 'war' ? 'warrAtk.gif' : q.type == 'arc' ? 'archAtk.gif' : q.type == 'worker' ? 'worker.gif' : ''}'>
+                                                     <p>lvl ${q.level}</p>
+                                                </div>
+                                                <div>x${q.quantity} [${q.time}]</div>
+                                                <button onclick='app.deleteQueue(${cindex},${qindex})'>X</button>
+                                            </div>
+                                        `);
+                                    });
+                                }
+                                try { this.goldPerSec += c.mine.worker * 10; } catch { };
+                            });
+
+                            if (this.war.length > 0) this.warUpdate();
+                        },
+                        goldPerSec() {
+                            if (this.goldPerSec < 300) this.agelvl = 1;
+                            else if (this.goldPerSec >= 300 && this.goldPerSec < 1000) this.agelvl = 2;
+                            else this.agelvl = 3;
+                        },
+                        continent: {
+                            deep: true,
+                            handler() {
+                                $('section article').html('');
+                                this.continent.forEach((c, cindex, object) => {
+                                    if (c.army) this.$firebaseRefs.instance.child(`continent/${c.id}`).update({ army: c.army });
+
+                                    if (c.queue && c.queue.length > 0) {
+                                        $('section article').append(`<div>Continent: ${c.id}</div>`);
+                                        c.queue.forEach((q, qindex, object) => {
+                                            $('section article').append(`
+                                            <div>
+                                                <div>
+                                                    <img title="${q.level == 1 ? 'level 1' : q.level == 2 ? 'level 2' : q.level == 3 ? 'level 3' : ''}"
+                                                     src='image/${q.type == 'war' ? 'warrAtk.gif' : q.type == 'arc' ? 'archAtk.gif' : q.type == 'worker' ? 'worker.gif' : ''}'>
+                                                     <p>Lvl ${q.level}</p>
+                                                </div>
+                                                <div>x${q.quantity} [${q.time}]</div>
+                                                <button onclick='app.deleteQueue(${cindex},${qindex})'>X</button>
+                                            </div>
+                                            `);
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    computed: {
+                        getPlayer() {
+                            let playerInfo = [];
+
+                            this.color.forEach(t => {
+                                if (t.id != "") {
+                                    this.users.forEach(a => {
+                                        if (a.id == t.id) playerInfo.push({ id: a.id, name: a.name, code: t.code });
+                                    });
+                                }
+                            });
+
+                            return playerInfo;
+                        }
+                    },
+                    methods: {
+                        getAttackerInfo(id, pow) {
+                            if (pow == 0) {
+                                this.alertText = "Please select the continent which have army";
+                                return;
+                            }
+                            let con = this.continent.find(c => c.id == id);
+                            this.tempContinent = { id, opponentId: JSON.parse(JSON.stringify(this.sectionParam.id)), arcCount: con.army.arc ? con.army.arc.length : 0, warCount: con.army.war ? con.army.war.length : 0, arc: con.army.arc, war: con.army.war };
+                        },
+                        launchAttack() {
+                            let id = this.tempContinent.id;
+                            let opponentId = this.tempContinent.opponentId;
+                            let ownArmy = [];
+
+                            if (this.tempContinent.war) {
+                                this.tempContinent.war.forEach(a => {
+                                    let quantity = parseInt($('#war' + a.level).val());
+                                    if (quantity <= a.total && quantity > 0) ownArmy.push({ type: 'war', level: a.level, total: quantity });
+                                });
+                            }
+                            if (this.tempContinent.arc) {
+                                this.tempContinent.arc.forEach(a => {
+                                    let quantity = parseInt($('#arc' + a.level).val());
+                                    if (quantity <= a.total && quantity > 0) ownArmy.push({ type: 'arc', level: a.level, total: quantity });
+                                });
+                            }
+                            if (ownArmy.length != 0) {
+                                if (this.instance.continent[opponentId].army) {
+                                    let oppArmy = [];
+                                    if (this.instance.continent[opponentId].army.war)
+                                        this.instance.continent[opponentId].army.war.forEach(w => {
+                                            oppArmy.push({ type: 'war', level: w.level, total: w.total });
+                                        });
+                                    if (this.instance.continent[opponentId].army.arc)
+                                        this.instance.continent[opponentId].army.arc.forEach(a => {
+                                            oppArmy.push({ type: 'arc', level: a.level, total: a.total });
+                                        });
+
+                                    this.war.push([{ id, army: ownArmy }, { id: opponentId, army: oppArmy }]);
+
+                                    let own = this.shapes.find(a => a.id == id), opp = this.shapes.find(a => a.id == opponentId);
+                                    if (own && opp) {
+                                        let a = findMiddle(own), b = findMiddle(opp);
+                                        let midPoint = new gm.LatLng((a.lat + b.lat) / 2, (a.lng + b.lng) / 2);
+                                        let line = createLine(id, opponentId, [new gm.LatLng(a.lat, a.lng), new gm.LatLng(b.lat, b.lng)]);
+                                        let p = gm.geometry.spherical.interpolate(new gm.LatLng(a.lat, a.lng), new gm.LatLng(b.lat, b.lng), 0.5);
+                                        let mark = createMarker(id, opponentId, p);
+                                    } else this.alertText = 'Something missing';
+                                }
+                                else {
+                                    // when u beat the opponent capital
+                                    if (this.instance.continent[opponentId].capital == true) {
+                                        let opponentUid = this.instance.continent[opponentId].player;
+
+                                        if (this.instance.player.host.id == opponentUid)
+                                            this.$firebaseRefs.instance.child(`/player/host`).update({ lose: true });
+                                        else if (this.instance.player.p2.id == opponentUid)
+                                            this.$firebaseRefs.instance.child(`/player/p2`).update({ lose: true });
+                                        else if (this.instance.player.p3.id == opponentUid)
+                                            this.$firebaseRefs.instance.child(`/player/p3`).update({ lose: true });
+                                        else if (this.instance.player.p4.id == opponentUid)
+                                            this.$firebaseRefs.instance.child(`/player/p4`).update({ lose: true });
+
+                                        this.remove(opponentId);
+                                        this.$firebaseRefs.instance.child('continent').once('value', snapshot => {
+                                            snapshot.forEach(c => {
+                                                if (c.val().player == opponentUid) {
+                                                    this.remove(c.key);
+                                                    this.$firebaseRefs.instance.child(`continent/${c.key}`).update({
+                                                        player: user.uid,
+                                                        capital: false
+                                                    });
+                                                }
+                                            });
+                                        });
+                                    }
+                                    else {
+                                        this.remove(opponentId)
+                                        this.$firebaseRefs.instance.child(`continent/${opponentId}`).update({ player: user.uid });
+                                    }
+                                    this.resetSection();
+                                }
+                            } else this.alertText = 'The army is empty !!!';
+                            this.tempContinent = null;
+                        },
+                        warUpdate() {
+                            this.war.forEach((w, windex, wobject) => {
+                                let conwar1 = w[0], conwar2 = w[1]; // continents
+                                let totalArmy = [0, 0], totalHP = [0, 0], totalAtk = [0, 0];
+
+                                conwar1.army.forEach(a => {
+                                    totalArmy[0] += a.total;
+
+                                    if (a.type == 'war') {
+                                        if (a.level == 1) {
+                                            totalHP[0] += 200 * a.total;
+                                            totalAtk[0] += 10 * a.total;
+                                        }
+                                        else if (a.level == 2) {
+                                            totalHP[0] += 400 * a.total;
+                                            totalAtk[0] += 20 * a.total;
+                                        }
+                                        else if (a.level == 3) {
+                                            totalHP[0] += 800 * a.total;
+                                            totalAtk[0] += 55 * a.total;
+                                        }
+                                    }
+                                    else if (a.type == 'arc') {
+                                        if (a.level == 1) {
+                                            totalHP[0] += 100 * a.total;
+                                            totalAtk[0] += 15 * a.total;
+                                        }
+                                        else if (a.level == 2) {
+                                            totalHP[0] += 250 * a.total;
+                                            totalAtk[0] += 30 * a.total;
+                                        }
+                                        else if (a.level == 3) {
+                                            totalHP[0] += 500 * a.total;
+                                            totalAtk[0] += 80 * a.total;
+                                        }
+                                    }
+                                });
+
+                                conwar2.army.forEach(a => {
+                                    totalArmy[1] += a.total;
+
+                                    if (a.type == 'war') {
+                                        if (a.level == 1) {
+                                            totalHP[1] += 200 * a.total;
+                                            totalAtk[1] += 10 * a.total;
+                                        }
+                                        else if (a.level == 2) {
+                                            totalHP[1] += 400 * a.total;
+                                            totalAtk[1] += 20 * a.total;
+                                        }
+                                        else if (a.level == 3) {
+                                            totalHP[1] += 800 * a.total;
+                                            totalAtk[1] += 55 * a.total;
+                                        }
+                                    }
+                                    else if (a.type == 'arc') {
+                                        if (a.level == 1) {
+                                            totalHP[1] += 100 * a.total;
+                                            totalAtk[1] += 15 * a.total;
+                                        }
+                                        else if (a.level == 2) {
+                                            totalHP[1] += 250 * a.total;
+                                            totalAtk[1] += 30 * a.total;
+                                        }
+                                        else if (a.level == 3) {
+                                            totalHP[1] += 500 * a.total;
+                                            totalAtk[1] += 80 * a.total;
+                                        }
+                                    }
+                                });
+
+                                const killPercent = [Math.max(totalHP[0] - totalAtk[1], 0) / totalHP[0], Math.max(totalHP[1] - totalAtk[0], 0) / totalHP[1]];
+
+                                let totalKilled = [];
+
+                                conwar1.army.forEach((cw, index, object) => {
+                                    let kill = killPercent[0] > 0 ? Math.ceil(cw.total * (1 - killPercent[0])) : cw.total;
+                                    cw.total -= kill;
+                                    totalKilled.push({ id: conwar1.id, type: cw.type, kill, level: cw.level });
+                                    if (cw.total <= 0) object.splice(index, 1);
+                                });
+
+                                conwar2.army.forEach((cw, index, object) => {
+                                    let kill = killPercent[1] > 0 ? Math.ceil(cw.total * (1 - killPercent[1])) : cw.total;
+                                    cw.total -= kill;
+                                    totalKilled.push({ id: conwar2.id, type: cw.type, kill, level: cw.level });
+                                    if (cw.total <= 0) object.splice(index, 1);
+                                });
+
+
+                                if (totalKilled.length > 0) {
+                                    totalKilled.forEach(t => {
+                                        if (t.type == 'war') {
+                                            let warPos = this.instance.continent[t.id].army.war.findIndex(w => w.level == t.level);
+
+                                            if (warPos != -1) {
+                                                let total = this.instance.continent[t.id].army.war[warPos].total - t.kill;
+
+                                                if (total > 0) this.$firebaseRefs.instance.child(`continent/${t.id}/army/war/${warPos}`).update({ total });
+                                                else {
+                                                    let cloneS = this.instance.continent[t.id].army.war.splice(warPos, 1);
+
+                                                    if (cloneS.length > 1) this.$firebaseRefs.instance.child(`continent/${t.id}/army/war`).set(cloneS);
+                                                    else this.$firebaseRefs.instance.child(`continent/${t.id}/army/war`).remove();
+                                                }
+                                            }
+                                        }
+                                        else if (t.type == 'arc') {
+                                            let arcPos = this.instance.continent[t.id].army.arc.findIndex(a => a.level == t.level);
+
+                                            if (arcPos != -1) {
+                                                let total = this.instance.continent[t.id].army.arc[arcPos].total - t.kill;
+                                                if (total > 0) this.$firebaseRefs.instance.child(`continent/${t.id}/army/arc/${arcPos}`).update({ total });
+                                                else {
+                                                    let cloneS = this.instance.continent[t.id].army.arc.splice(arcPos, 1);
+
+                                                    if (cloneS.length > 1) this.$firebaseRefs.instance.child(`continent/${t.id}/army/arc`).set(cloneS);
+                                                    else this.$firebaseRefs.instance.child(`continent/${t.id}/army/arc`).remove();
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    if (conwar1.army.length > 0 && conwar2.army.length <= 0) {
+                                        if (this.instance.continent[conwar2.id].capital == true) {
+                                            let opponentUid = this.instance.continent[conwar2.id].player;
+
+                                            if (this.instance.player.host.id == opponentUid)
+                                                this.$firebaseRefs.instance.child(`/player/host`).update({ lose: true });
+                                            else if (this.instance.player.p2.id == opponentUid)
+                                                this.$firebaseRefs.instance.child(`/player/p2`).update({ lose: true });
+                                            else if (this.instance.player.p3.id == opponentUid)
+                                                this.$firebaseRefs.instance.child(`/player/p3`).update({ lose: true });
+                                            else if (this.instance.player.p4.id == opponentUid)
+                                                this.$firebaseRefs.instance.child(`/player/p4`).update({ lose: true });
+
+                                            this.remove(conwar2.id)
+                                            // when continent child got update
+                                            this.$firebaseRefs.instance.child('continent').once('value', snapshot => {
+                                                snapshot.forEach(c => {
+                                                    if (c.val().player == opponentUid) {
+                                                        this.remove(c.key);
+                                                        this.$firebaseRefs.instance.child(`continent/${c.key}`).update({
+                                                            player: user.uid, capital: false
+                                                        });
+                                                    }
+                                                });
+                                            })
+                                        }
+                                        else {
+                                            this.remove(conwar2.id);
+                                            this.$firebaseRefs.instance.child(`continent/${conwar2.id}`).update({
+                                                player: this.instance.continent[conwar1.id].player
+                                            });
+                                        }
+                                        this.war.splice(windex, 1);
+                                        removeWarIcon(conwar1.id, conwar2.id);
+                                    }
+                                    else if (conwar1.army.length <= 0) {
+                                        this.war.splice(windex, 1);
+                                        removeWarIcon(conwar1.id, conwar2.id);
+                                    }
+                                }
+                            });
+                        },
+                        addMineWorker(i, value) {
+                            const con = this.continent[i];
+                            if (value == +1 && con.mine.worker < 5 && con.worker > 0) {
+                                con.mine.worker += 1;
+                                con.worker -= 1;
+                            } else if (value == +1) this.alertText = "No more worker(s)";
+
+                            if (value == -1 && con.mine.worker > 0) {
+                                con.mine.worker -= 1;
+                                con.worker += 1;
+                            }
+                            else if (value == -1) this.alertText = "No worker(s) in mine";
+
+                            this.goldPerSec = 0;
+                            try { this.goldPerSec += c.mine.worker * 10; } catch { };
+                        },
+                        addContinent(id) {
+                            if (this.totalGold >= 5000) {
+                                this.$firebaseRefs.instance.child(`continent/${id}`).set({
+                                    army: "", capital: false, player: user.uid
+                                }).then(() => this.totalGold -= 5000);
+                                this.resetSection();
+                            } else this.alertText = "Insufficient gold";
+                        },
+                        addTraining(id) {
+                            const cost = this.trainCenterLvl == 1 ? 100 :
+                                this.trainCenterLvl == 2 ? 500 :
+                                    this.trainCenterLvl == 3 ? 2000 : 0;
+
+                            if (this.continent.find(c => c.id == id && c.trainCenter != undefined))
+                                this.alertText = "Already built";
+                            else if (this.totalGold >= cost) {
+                                let p = this.shapes.find(a => a.id == id);
+                                let { lat, lng } = findMiddle(p)
+                                let con = this.continent.find(a => a.id == id);
+
+                                con.trainCenter = this.trainCenterLvl;
+
+                                let mark = capMarker(id, new gm.LatLng(lat, lng - 0.025), 'image/army.png');
+
+                                this.totalGold -= cost;
+
+                                if (p) gm.event.trigger(p, 'click', {});
+                            }
+                            else this.alertText = "Insufficient gold";
+                        },
+                        addMine(id) {
+                            // check total gold mine
+                            let tgm = this.continent.filter(c => c.mine).length;
+                            let cost = tgm * 1000;
+                            let continentPos = false;
+
+                            for (let i = 0; i < this.continent.length; i++) {
+                                if (this.continent[i].id == id) {
+                                    continentPos = i;
+                                    break;
+                                }
+                            }
+
+                            if (continentPos !== false && this.continent[continentPos].mine)
+                                this.alertText = 'Already built';
+                            else if (continentPos !== false && this.totalGold >= cost) {
+                                let p = this.shapes.find(a => a.id == id);
+                                let { lat, lng } = findMiddle(p)
+                                let mark = capMarker(id, new gm.LatLng(lat, lng + 0.025), 'image/coin.gif');
+
+                                this.continent[continentPos].mine = { worker: 0 };
+                                this.totalGold -= cost;
+
+                                if (p) gm.event.trigger(p, 'click', {});
+                            }
+                            else this.alertText = "Insufficient gold";
+                        },
+                        upgrade() {
+                            /*Upgrade trainCenter if lvl 1*/
+                            const cost = this.trainCenterLvl == 1 ? 10000 :
+                                this.trainCenterLvl == 2 ? 20000 : 0;
+
+                            if (this.totalGold >= cost) {
+                                if (this.trainCenterLvl < 3) {
+                                    this.totalGold -= cost;
+                                    this.trainCenterLvl++;
+                                }
+                                else this.alertText = "Reached the maximum level";
+                            }
+                            else this.alertText = "Insufficient gold";
+                        },
+                        trainWorker(id) {
+                            const q = parseInt($('#newWorkers').val());
+
+                            if (this.totalGold >= 100 && q && q > 0 && q <= 5) {
+                                const conti = this.continent.find(c => c.id == this.tempId);
+                                conti.queue.push({ type: 'worker', quantity: q, time: q * 60 });
+                                this.totalGold -= 100;
+                            }
+                        },
+                        trainArmy(id, type) {
+                            let found = false;
+                            let continent = this.continent.find(c => c.id == id);
+                            switch (type) {
+                                case "war1":
+                                    found = false;
+                                    if (continent && this.totalGold > 10) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'war' && con.level == 1) {
+                                                con.quantity += 1;
+                                                con.time += 10;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'war', level: 1, quantity: 1, time: 10 });
+
+                                        this.totalGold -= 10;
+                                    } break;
+                                case "war2":
+                                    found = false;
+                                    if (continent && this.totalGold > 20) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'war' && con.level == 2) {
+                                                con.quantity += 1;
+                                                con.time += 20;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'war', level: 2, quantity: 1, time: 20 });
+
+                                        this.totalGold -= 20;
+                                    } break;
+                                case "war3":
+                                    found = false;
+                                    if (continent && this.totalGold > 40) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'war' && con.level == 3) {
+                                                con.quantity += 1;
+                                                con.time += 30;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'war', level: 3, quantity: 1, time: 30 });
+
+                                        this.totalGold -= 30;
+                                    } break;
+                                case "arc1":
+                                    found = false;
+                                    if (continent && this.totalGold > 10) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'arc' && con.level == 1) {
+                                                con.quantity += 1;
+                                                con.time += 10;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'arc', level: 1, quantity: 1, time: 10 });
+
+                                        this.totalGold -= 10;
+                                    } break;
+                                case "arc2":
+                                    found = false;
+                                    if (continent && this.totalGold > 20) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'arc' && con.level == 2) {
+                                                con.quantity += 1;
+                                                con.time += 20;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'arc', level: 2, quantity: 1, time: 20 });
+
+                                        this.totalGold -= 20;
+                                    } break;
+                                case "arc3":
+                                    found = false;
+                                    if (continent && this.totalGold > 40) {
+                                        continent.queue.forEach(con => {
+                                            if (con.type == 'arc' && con.level == 3) {
+                                                con.quantity += 1;
+                                                con.time += 30;
+                                                found = true;
+                                            }
+                                        });
+
+                                        if (!found) continent.queue.push({ type: 'arc', level: 3, quantity: 1, time: 30 });
+
+                                        this.totalGold -= 30;
+                                    } break;
+                            }
+                        },
+                        deleteQueue(con, index) {
+                            this.continent[con].queue.splice(index, 1);
+                        },
+                        load() {
+                            ref.get().then(doc => {
+                                doc.forEach(a => {
+                                    const path = gm.geometry.encoding.decodePath(a.data().position);
+                                    let polygon = setPolygon(path);
+                                    polygon.id = a.id;
+                                    polygon.addListener('click', e => {
+                                        clearInfoWindow();
+                                        let empty = true;
+
+                                        realdb.child('continent').once('value', snapshot => {
+                                            if (snapshot.val()) {
+                                                snapshot.forEach(c => {
+                                                    if (polygon.id == c.key) {
+                                                        // When continent is capital
+                                                        if (c.val().capital == true) {
+                                                            // Own capital
+                                                            if (c.val().player == user.uid) {
+                                                                let currentContinent = app.continent.find(i => i.id == polygon.id);
+                                                                this.resetSection();
+                                                                let wCount = 0, aCount = 0;
+                                                                let powerHP = { power: 0, hp: 0 };
+                                                                if (currentContinent) {
+                                                                    if (currentContinent.mine) goldSecond = 10 * currentContinent.mine.worker;
+                                                                    if (currentContinent['army']) {
+                                                                        if (currentContinent['army']['war']) {
+                                                                            if (currentContinent['army']['arc']) {
+                                                                                powerHP = findPower(currentContinent['army']['war'], currentContinent['army']['arc']);
+                                                                                wCount = currentContinent['army']['war'].length;
+                                                                                aCount = currentContinent['army']['arc'].length;
+                                                                            }
+                                                                            else {
+                                                                                powerHP = findPower(currentContinent['army']['war'], null);
+                                                                                wCount = currentContinent['army']['war'].length;
+                                                                            }
+                                                                        }
+                                                                        else if (currentContinent['army']['arc']) {
+                                                                            powerHP = findPower(null, currentContinent['army']['arc']);
+                                                                            wCount = currentContinent['army']['arc'].length;
+                                                                        }
+                                                                    } else currentContinent['army'] = { war: [], arc: [] };
+
+                                                                    this.sectionParam = {
+                                                                        id: polygon.id, power: powerHP.power,
+                                                                        worker: this.continent.find(i => i.id == polygon.id).worker,
+                                                                        totalGoldMine: this.continent.filter(i => i.mine).length,
+                                                                        war: currentContinent.army.war,
+                                                                        arc: currentContinent.army.arc,
+                                                                        warCount: wCount, arcCount: aCount,
+                                                                        totalTrain: this.continent.filter(i => i.trainCenter).length,
+                                                                        trainBuild: currentContinent.trainCenter ? true : false,
+                                                                        mineBuild: currentContinent.mine ? true : false
+                                                                    }
+
+                                                                    $('#ownCapital')[0].hidden = false;
+                                                                }
+
+                                                            }
+                                                            // Opponent capital
+                                                            else {
+                                                                this.resetSection();
+
+                                                                let storeNeighbor = [], ownCon = [];
+                                                                let { lat, lng } = findMiddle(polygon);
+                                                                const curr = new gm.LatLng(lat, lng);
+
+                                                                storeNeighbor = this.shapes.filter(a => {
+                                                                    const { lat, lng } = findMiddle(a);
+                                                                    const temp = new gm.LatLng(lat, lng);
+                                                                    const dif = gm.geometry.spherical.computeDistanceBetween(temp, curr);
+                                                                    return (dif > 8660 && dif < 8690);
+                                                                });
+
+                                                                storeNeighbor.forEach(a => {
+                                                                    this.continent.forEach(b => {
+                                                                        if (b.id == a.id) {
+                                                                            let powerHP = { power: 0, hp: 0 };
+
+                                                                            if (b.id == a.id) {
+                                                                                if (b['army']) {
+                                                                                    if (b['army']['war'])
+                                                                                        powerHP = b['army']['arc'] ?
+                                                                                            findPower(b['army']['war'], b['army']['arc']) :
+                                                                                            findPower(b['army']['war'], null);
+                                                                                    else {
+                                                                                        if (b['army']['arc']) powerHP = findPower(null, b['army']['arc']);
+                                                                                    }
+                                                                                }
+                                                                                ownCon.push({ id: b.id, power: powerHP.power });
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                });
+
+                                                                if (c.key == polygon.id) {
+                                                                    const dbContinent = c.val();
+                                                                    let player = '', index = 0, attackable = false;
+                                                                    app.users.forEach(a => {
+                                                                        if (a.id == dbContinent.player) {
+                                                                            index = a.id.indexOf(dbContinent.player) + 1;
+                                                                            player = 'Player ' + index + ' (' + a.name + ')';
+                                                                        }
+                                                                    });
+
+                                                                    let power = 0;
+                                                                    if (dbContinent['army']) {
+                                                                        if (dbContinent['army']['war'])
+                                                                            power += dbContinent['army']['arc'] ?
+                                                                                findPower(dbContinent['army']['war'], dbContinent['army']['arc']).power :
+                                                                                findPower(dbContinent['army']['war'], null).power;
+                                                                        else {
+                                                                            if (dbContinent['army']['arc'])
+                                                                                power += findPower(null, dbContinent['army']['arc']).power;
+                                                                        }
+
+                                                                    }
+                                                                    if (ownCon.length >= 1) attackable = true;
+
+                                                                    this.sectionParam = {
+                                                                        id: polygon.id,
+                                                                        player,
+                                                                        power,
+                                                                        own: ownCon,
+                                                                        attackable
+                                                                    }
+                                                                    $('#opponentCapital')[0].hidden = false;
+                                                                }
+                                                            }
+                                                        }
+                                                        // When continent is not capital
+                                                        else {
+                                                            let powerHP = { power: 0, hp: 0 };
+                                                            let wCount = 0, aCount = 0;
+                                                            // Own continent
+                                                            if (c.val().player == user.uid) {
+                                                                this.resetSection();
+                                                                const currentContinent = this.continent.find(i => i.id == polygon.id);
+
+                                                                let goldSecond = 0;
+
+                                                                if (currentContinent) {
+                                                                    if (currentContinent.mine) goldSecond = 10 * currentContinent.mine.worker;
+
+                                                                    if (currentContinent['army']) {
+                                                                        if (currentContinent['army']['war']) {
+                                                                            if (currentContinent['army']['arc']) {
+                                                                                powerHP = findPower(currentContinent['army']['war'], currentContinent['army']['arc']);
+                                                                                wCount = currentContinent['army']['war'].length;
+                                                                                aCount = currentContinent['army']['arc'].length;
+                                                                            }
+                                                                            else {
+                                                                                powerHP = findPower(currentContinent['army']['war'], null);
+                                                                                wCount = currentContinent['army']['war'].length;
+                                                                            }
+                                                                        }
+                                                                        else if (currentContinent['army']['arc']) {
+                                                                            powerHP = findPower(null, currentContinent['army']['arc']);
+                                                                            aCount = currentContinent['army']['arc'].length;
+                                                                        }
+                                                                    }
+                                                                    else currentContinent['army'] = { war: [], arc: [] };
+
+                                                                    this.sectionParam = {
+                                                                        id: polygon.id, power: powerHP.power, goldSecond,
+                                                                        war: currentContinent.army.war, arc: currentContinent.army.arc,
+                                                                        warCount: wCount, arcCount: aCount,
+                                                                        worker: currentContinent.worker,
+                                                                        trainBuild: currentContinent.trainCenter ? true : false,
+                                                                        mineBuild: currentContinent.mine ? true : false
+                                                                    };
+
+                                                                    $('#myContinent')[0].hidden = false;
+                                                                }
+                                                            }
+                                                            // Opponent continent
+                                                            else {
+                                                                this.resetSection();
+                                                                // Check the opponen whether is neighbour or not
+
+                                                                let storeNeighbor = [];
+                                                                let ownCon = [];
+                                                                let { lat, lng } = findMiddle(polygon);
+                                                                const curr = new gm.LatLng(lat, lng);
+                                                                storeNeighbor = this.shapes.filter(a => {
+                                                                    const { lat, lng } = findMiddle(a);
+                                                                    const temp = new gm.LatLng(lat, lng);
+                                                                    const dif = gm.geometry.spherical.computeDistanceBetween(temp, curr);
+                                                                    return (dif > 8660 && dif < 8690);
+                                                                });
+                                                                storeNeighbor.forEach(a => {
+                                                                    this.continent.forEach(b => {
+                                                                        let powerHP = { power: 0, hp: 0 };
+
+                                                                        if (b.id == a.id) {
+                                                                            if (b['army']) {
+                                                                                if (b['army']['war'])
+                                                                                    powerHP = b['army']['arc'] ?
+                                                                                        findPower(b['army']['war'], b['army']['arc']) :
+                                                                                        findPower(b['army']['war'], null);
+                                                                                else if (b['army']['arc'])
+                                                                                    powerHP = findPower(null, b['army']['arc']);
+                                                                            }
+                                                                            ownCon.push({ id: b.id, power: powerHP.power });
+                                                                        }
+                                                                    });
+                                                                });
+
+                                                                if (c.key == polygon.id) {
+                                                                    const dbContinent = c.val();
+                                                                    let powerHP = { power: 0, hp: 0 };
+                                                                    let player = '', index = 0, attackable = false;
+                                                                    let play = app.color.find(c => c.id == dbContinent.player);
+
+                                                                    index = app.color.indexOf(play) + 1;
+                                                                    app.users.forEach(a => {
+                                                                        if (a.id == dbContinent.player) player = 'Player ' + index + ' (' + a.name + ')';
+                                                                    });
+
+                                                                    if (dbContinent['army']) {
+                                                                        if (dbContinent['army']['war'])
+                                                                            powerHP = dbContinent['army']['arc'] ?
+                                                                                findPower(dbContinent['army']['war'], dbContinent['army']['arc']) :
+                                                                                findPower(dbContinent['army']['war'], null);
+                                                                        else if (dbContinent['army']['arc'])
+                                                                            powerHP = findPower(null, dbContinent['army']['arc']);
+                                                                    }
+
+                                                                    $('#opponentContinent')[0].hidden = false;
+
+                                                                    if (ownCon.length > 0) attackable = true;
+
+                                                                    this.sectionParam = {
+                                                                        id: polygon.id,
+                                                                        power: powerHP.power,
+                                                                        own: ownCon,
+                                                                        player, attackable
+                                                                    }
+
+                                                                }
+                                                            }
+                                                        }
+                                                        empty = false;
+                                                    }
+                                                });
+
+                                                if (empty) {
+                                                    // check neighbour
+                                                    let storeNeighbor = [];
+                                                    let { lat, lng } = findMiddle(polygon);
+                                                    const curr = new gm.LatLng(lat, lng)
+                                                    storeNeighbor = this.shapes.filter(a => {
+                                                        const { lat, lng } = findMiddle(a)
+                                                        const temp = new gm.LatLng(lat, lng)
+                                                        const dif = gm.geometry.spherical.computeDistanceBetween(temp, curr)
+                                                        return (dif > 8660 && dif < 8690)
+                                                    });
+                                                    let found = false;
+                                                    storeNeighbor.forEach(n => {
+                                                        if (this.continent.find(c => c.id == n.id)) {
+                                                            this.resetSection();
+                                                            this.sectionParam = { id: polygon.id };
+                                                            $('#neighbourContinent')[0].hidden = false;
+                                                            found = true;
+                                                        }
+                                                    });
+                                                    if (!found) {
+                                                        this.resetSection();
+                                                        this.sectionParam = { id: polygon.id };
+                                                        $('#emptyContinent')[0].hidden = false;
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    });
+                                    this.shapes.push(polygon);
+                                });
+                            }).then(() => {
+                                realdb.once("value", async snapshot => {
+                                    if (!snapshot.child('player').val()) {
+                                        const startingContinent = [1, 32, 118, 99];
+                                        const color = ["#FF0000", "#0000FF", "#00FF00", "#FFFF00"];
+
+                                        await realdb.child('player').set({
+                                            host: { id: user.uid, code: color.pop(Math.floor(Math.random() * color.length)), lose: false },
+                                            p2: { id: '', code: color.pop(Math.floor(Math.random() * color.length)), lose: false },
+                                            p3: { id: '', code: color.pop(Math.floor(Math.random() * color.length)), lose: false },
+                                            p4: { id: '', code: color.pop(), lose: false }
+                                        });
+                                        await realdb.child(`continent/${startingContinent.pop(Math.floor(Math.random() * startingContinent.length))}`).set({
+                                            player: user.uid, capital: true, army: ''
+                                        });
+                                        await realdb.child(`continent/${startingContinent.pop(Math.floor(Math.random() * startingContinent.length))}`).set({
+                                            player: '', capital: true, army: ''
+                                        });
+                                        await realdb.child(`continent/${startingContinent.pop(Math.floor(Math.random() * startingContinent.length))}`).set({
+                                            player: '', capital: true, army: ''
+                                        });
+                                        await realdb.child(`continent/${startingContinent.pop()}`).set({
+                                            player: '', capital: true, army: ''
+                                        });
+                                        await realdb.update({ gameTime: 0 });
+                                        instance.doc(roomid).set({ host: user.uid });
+                                    }
+                                    else {
+                                        let tempJson = [];
+                                        jQuery.each(snapshot.child('player').toJSON(), (i, v) => tempJson.push(v));
+                                        let found = tempJson.find(p => p.id == user.uid);
+
+                                        if (!found) {
+                                            snapshot.child('player').forEach(c => {
+                                                if (!found && c.val().id == "") {
+                                                    realdb.child(`player/${c.key}`).update({ id: user.uid });
+                                                    instance.doc(roomid).set({ player: user.uid }, { merge: true });
+                                                    found = true;
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    if (snapshot.child('continent').val()) {
+                                        let tempJson = [];
+                                        jQuery.each(snapshot.child('continent').toJSON(), (i, v) => tempJson.push(v));
+                                        let found = tempJson.find(p => p.player == user.uid);
+
+                                        if (!found) {
+                                            snapshot.child('continent').forEach(c => {
+                                                if (!found && c.val().capital == true && c.val().player == "") {
+                                                    realdb.child(`continent/${c.key}`).update({ player: user.uid });
+                                                    found = true;
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                }).then(() => {
+                                    let numOfPlayer = 0;
+
+                                    this.$firebaseRefs.instance.child('player').on('value', c => {
+                                        if (c.val().p2.id != "") numOfPlayer++;
+                                        if (c.val().p3.id != "") numOfPlayer++;
+                                        if (c.val().p4.id != "") numOfPlayer++;
+
+                                        this.color = [c.val().host, c.val().p2, c.val().p3, c.val().p4];
+
+                                        if (numOfPlayer > 0) {
+                                            $('main').show();
+                                            $('header').show();
+                                            $('#loading').hide();
+                                            if (c.val().host.id == user.uid && this.gameStart == false) {
+                                                this.gameStart = true;
+                                                intervalPerSecond();
+                                            }
+                                        }
+
+                                        if (c.val().host.id == user.uid && c.val().host.lose == true)
+                                            this.alertText = 'You lose 😢';
+                                        else if (c.val().p2.id == user.uid && c.val().p2.lose == true)
+                                            this.alertText = 'You lose 😢';
+                                        else if (c.val().p3.id == user.uid && c.val().p3.lose == true)
+                                            this.alertText = 'You lose 😢';
+                                        else if (c.val().p4.id == user.uid && c.val().p4.lose == true)
+                                            this.alertText = 'You lose 😢';
+                                    });
+
+                                    this.$firebaseRefs.instance.child('continent').on('value', a => {
+                                        let p = [];
+                                        a.forEach(c => {
+                                            if (c.val().player != "") {
+                                                if (c.val().player != user.uid) p.push(c);
+
+                                                const findContinent = this.continent.findIndex(i => i.id == c.key);
+
+                                                if (findContinent == -1 && c.val().player == user.uid) {
+                                                    this.continent.push({
+                                                        id: c.key,
+                                                        worker: c.val().capital == true ? 5 : 1,
+                                                        army: c.val().army ? c.val().army : { war: [], arc: [] },
+                                                        queue: []
+                                                    });
+                                                }
+                                                else if (findContinent != -1 && c.val().player != user.uid) {
+                                                    this.remove(c.key);
+                                                    this.continent.splice(findContinent, 1);
+                                                }
+
+                                                const colorCode = this.color.find(cl => c.val().player == cl.id);
+
+                                                if (colorCode) {
+                                                    this.shapes.forEach(s => {
+                                                        if (s.id == c.key && s.fillColor != colorCode.code && s.strokeColor != colorCode.code) {
+                                                            s.setOptions({
+                                                                fillColor: colorCode.code,
+                                                                strokeColor: colorCode.code
+                                                            });
+                                                            if (c.val().capital == true) {
+                                                                const { lat, lng } = findMiddle(s);
+                                                                capMarker(s.id, new gm.LatLng(lat, lng), 'image/star.gif');
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                                if (findContinent != -1 && c.val().player == user.uid) {
+                                                    this.continent[findContinent].army = c.val().army ? c.val().army : { war: [], arc: [] };
+                                                    updatePowerInfo(c.key);
+                                                }
+                                            }
+                                        });
+                                        if (p.length == 0 && this.gameStart) this.alertText = 'You win ';
+                                    });
+
+                                    this.$firebaseRefs.instance.child('gameTime').on('value', () => this.gameTime = this.instance.gameTime);
+                                });
+                            });
+                        },
+                        remove(id) {
+                            let shape = this.shapes.find(c => c.id == id);
+                            if (shape) {
+                                let mine = this.mines.find(m => m.id == id);
+                                if (mine) mine.setMap(null);
+
+                                let train = this.trains.find(m => m.id == id);
+                                if (train) train.setMap(null);
+
+                                let star = this.starMarker.find(m => m.id == id);
+                                if (star) star.setMap(null);
+                            }
+                        },
+                        cancel(type) {
+                            if (type == "mine") mine.close();
+                            else if (type == "train") train.close();
+                            else if (type == "capital") {
+                                this.tempId = null;
+                                capital.close();
+                            }
+                        },
+                        pan(id) {
+                            let continent = null;
+                            realdb.child('continent').on('value', snapshot => {
+                                if (snapshot.val()) {
+                                    snapshot.forEach(c => {
+                                        if (c.val().player != "" && c.val().player == id) continent = c.key;
+                                    });
+                                }
+                            });
+                            if (continent) {
+                                const con = this.shapes.filter(shape => shape.id == continent);
+                                const { lat, lng } = findMiddle(con[0]);
+
+                                map.panTo(new gm.LatLng(lat, lng));
+                            }
+                        },
+                        resetSection() {
+                            const children = $('section div')[0].children;
+                            for (let child of children) child.hidden = true;
+                        },
+                        addWorker(id, quantity) {
+                            const cost = this.worker == 1 ? 500 : this.worker == 2 ? 1000 :
+                                this.worker == 3 ? 3000 : this.worker == 4 ? 5000 :
+                                    this.worker == 5 ? 20000 : 0;
+                            if (this.totalGold >= cost) this.totalGold -= cost;
+                        }
+                    },
+                    created() { this.load(); }
+                });
+
+                const home = { lat: 3.215000, lng: 101.730000 };
+
+                const map = new gm.Map($('#map')[0], {
+                    center: home,
+                    zoom: 12,
+                    disableDefaultUI: true,
+                    disableDoubleClickZoom: true,
+                    clickableIcons: false,
+                    mapTypeId: 'terrain',
+                    minZoom: 10,
+                    maxZoom: 13
+                });
+
+                map.setTilt(15);
+
+                let selangorBoundary = [];
+                fetch('selangor.txt')
+                    .then(f => f.json())
+                    .then(a => a.coordinate.forEach(b => selangorBoundary.push({ lat: b[1], lng: b[0] })))
+                    .then(() => {
+                        new gm.Polygon({
+                            map,
+                            path: selangorBoundary,
+                            strokeColor: 'black',
+                            strokeWeight: 1,
+                            fillColor: 'transparent'
+                        });
+
+                        map.setRestriction({
+                            latLngBounds: {
+                                north: selangorBoundary.sort((a, b) => b.lat - a.lat)[0].lat + 0.54,
+                                south: selangorBoundary.sort((a, b) => a.lat - b.lat)[0].lat - 0.54,
+                                west: selangorBoundary.sort((a, b) => a.lng - b.lng)[0].lng - 0.54,
+                                east: selangorBoundary.sort((a, b) => b.lng - a.lng)[0].lng + 1.08,
+                            }
+                        });
+                    });
+
+                const capital = new gm.InfoWindow({ content: $('#capital')[0] });
+                const mine = new gm.InfoWindow({ content: $('#mine')[0], maxWidth: 500 });
+                const train = new gm.InfoWindow({ content: $('#training')[0], maxWidth: 500 });
+
+                function clearInfoWindow() {
+                    capital.close();
+                    mine.close();
+                    train.close();
+                }
+
+                const line = new gm.Polyline({
+                    map,
+                    strokeColor: 'red',
+                    strokeOpacity: 1,
+                    strokeWeight: 10,
+                    geodesic: true,
+                });
+
+                function createLine(id, opponent, twoPosition) {
+                    const line = new gm.Polyline({
+                        id, map,
+                        opponentId: opponent,
+                        path: twoPosition,
+                        strokeColor: 'red',
+                        strokeOpacity: 1,
+                        strokeWeight: 10,
+                        geodesic: true,
+                    });
+                    app.warLine.push(line);
+                    return line
+                }
+
+                function removeWarIcon(id, opponent) {
+                    const marks = app.warMarker.filter(a => a.id == id && a.opponentId == opponent);
+                    if (marks) {
+                        marks.forEach(mark => {
+                            let index = app.warMarker.indexOf(mark);
+                            app.warMarker = app.warMarker.splice(index, 1);
+                            mark.setMap(null);
+                        });
+
+                    }
+
+                    const line = app.warLine.find(a => a.id == id && a.opponentId == opponent);
+                    if (line) {
+                        line.setMap(null);
+                        const index = app.warLine.indexOf(line);
+                        app.line = app.warLine.splice(index, 1);
+                    }
+                }
+
+                function createMarker(id, opponent, position) {
+                    const m = new gm.Marker({
+                        position, map, id,
+                        draggable: false,
+                        opponentId: opponent,
+                        animation: gm.Animation.DROP,
+                        icon: { url: 'image/sword.gif', scaledSize: new gm.Size(38, 40) }
+                    });
+                    app.warMarker.push(m);
+
+                    return m;
+                }
+
+                function setPolygon(path) {
+                    // Create a new polygon based on the path given
+                    return new gm.Polygon({
+                        map, path,
+                        strokeColor: '#FFFFFF33',
+                        fillColor: '#FFFFFF88',
+                        draggable: false,
+                        type: 'polygon'
+                    });
+                }
+
+                function capMarker(id, position, p) {
+                    let m = new gm.Marker({
+                        position, map, id,
+                        draggable: false,
+                        animation: gm.Animation.DROP,
+                        icon: { url: p, scaledSize: new gm.Size(38, 40) }
+                    });
+
+                    if (p == 'image/coin.gif')
+                        app.mines.push(m);
+                    else if (p == 'image/army.png')
+                        app.trains.push(m);
+                    else if (p == 'image/star.gif')
+                        app.starMarker.push(m)
+
+                    m.addListener('click', e => {
+                        clearInfoWindow();
+                        if (p == "image/coin.gif") {
+                            for (let i = 0; i < app.continent.length; i++) {
+                                if (app.continent[i].id == id && app.continent[i].mine) {
+                                    app.tempInfo = i;
+                                }
+                            }
+                            mine.open(map, m);
+                        }
+                        else if (p == "image/army.png") {
+                            const curr = app.continent.find(a => a.id == id);
+                            if (curr) {
+                                app.tempInfo = {
+                                    id: id,
+                                    level: curr.trainCenter,
+                                    queue: curr.queue
+                                }
+                            }
+                            train.open(map, m);
+                        }
+                        else if (p == "image/star.gif") {
+                            if (app.continent.find(c => c.id == id)) {
+                                app.tempId = id;
+                                capital.open(map, m);
+                            }
+                        }
+                    });
+                    return m;
+                }
+
+                function findPower(wars, arcs) {
+                    let power = 0, hp = 0;
+
+                    if (wars) {
+                        wars.forEach(item => {
+                            switch (item.level) {
+                                case 1:
+                                    power += 10 * item.total;
+                                    hp += 200 * item.total;
+                                    break;
+                                case 2:
+                                    power += 20 * item.total;
+                                    hp += 400 * item.total;
+
+                                    break;
+                                case 3:
+                                    power += 55 * item.total;
+                                    hp += 800 * item.total;
+
+                                    break;
+                                default: power += 0;
+                                    hp += 0; break;
+                            }
+                        });
+                    }
+
+                    if (arcs) {
+                        arcs.forEach(item => {
+                            switch (item.level) {
+                                case 1:
+                                    power += 15 * item.total;
+                                    hp += 100 * item.total;
+                                    break;
+                                case 2:
+                                    power += 30 * item.total;
+                                    hp += 250 * item.total;
+                                    break;
+                                case 3:
+                                    power += 80 * item.total;
+                                    hp += 500 * item.total;
+                                    break;
+                                default: power += 0; hp += 0; break;
+                            }
+                        });
+                    }
+                    return { power, hp };
+                }
+
+                function findMiddle(polygon) {
+                    let bounds = new google.maps.LatLngBounds();
+                    let polygonBounds = polygon.getPath();
+                    let coordinates = [];
+
+                    for (let k = 0; k < polygonBounds.length; k++)
+                        coordinates.push(new gm.LatLng(polygonBounds.getAt(k).lat(), polygonBounds.getAt(k).lng()));
+
+                    for (let k = 0; k < coordinates.length; k++)
+                        bounds.extend(coordinates[k]);
+
+                    return { lat: bounds.getCenter().lat(), lng: bounds.getCenter().lng() };
+                }
+
+                function updatePowerInfo(id) {
+                    let powerHP = { power: 0, hp: 0 };
+
+                    const currentContinent = app.continent.find(i => i.id == id);
+
+                    if (currentContinent['army']) {
+                        if (currentContinent['army']['war'])
+                            powerHP = currentContinent['army']['arc'] ?
+                                findPower(currentContinent['army']['war'], currentContinent['army']['arc']) :
+                                findPower(currentContinent['army']['war'], null);
+                        else if (currentContinent['army']['acr'])
+                            powerHP = findPower(null, currentContinent['army']['arc']);
+                    }
+
+                    // Update the realtime firebase
+                    if (id == app.sectionParam.id) {
+                        let o = app.shapes.find(a => a.id == id);
+                        if (o) gm.event.trigger(o, 'click', {});
+                    } else {
+                        let o = app.shapes.find(a => a.id == app.sectionParam.id);
+                        if (o) gm.event.trigger(o, 'click', {});
+                    }
+                }
+                const intervalPerSecond = () => setInterval(() => { app.$firebaseRefs.instance.update({ gameTime: app.instance.gameTime ? app.instance.gameTime + 1 : 1 }); }, 1000);
+            }
+            else location = "login.html";
+        });
+    </script>
+</body>
+
+</html>

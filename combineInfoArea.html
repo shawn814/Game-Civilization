@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="image/favicon.png">
+    <link rel="stylesheet" href="css/app.css">
+    <title>Google Maps JS API</title>
+    <style>
+        main {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 10px;
+        }
+
+        #map {
+            border: 1px solid #333;
+        }
+        
+        .attack, .attack *{
+            cursor: url('image/attack.cur') ,pointer ;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1><a href="index.html">Demo6 : Shapes</a></h1>
+    </header>
+
+    <nav>
+        <a>...</a>
+        <a href="demo4.html">Demo4</a>
+        <a href="demo5.html">Demo5</a>
+        <a href="demo6.html">Demo6</a>
+        <a href="demo7.html">Demo7</a>
+        <a>...</a>
+    </nav>
+
+    <main id="app" v-cloak>
+        <div id="panel">
+            <select v-model="type">
+                <option value="circle">Circle</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="polygon">Polygon</option>
+            </select>
+
+
+            <hr>
+
+            <button @click="save">Save</button>
+            <button @click="load">Load</button>
+            Polygon = {{ count('polygon') }}
+            <button @click="change">Change</button>
+        </div>
+
+        <div id="map"></div>
+        <!-- <div hidden>
+            <form id="info" @submit.prevent="submit">
+               
+            </form>
+        </div> -->
+        <div hidden>
+            <form id="info" @submit.prevent="submit">
+                <div>Owner:
+                    {{owner}}
+                </div>
+                <label>
+                    Money:
+                    {{money}}
+                </label>
+                <div>
+                    <div id="war">
+                        Warrior
+                        <input type="text" v-model.trim="army['war']['1']">
+                        {{army['war']['1']}}
+                        {{army['war']['2']}}
+                        {{army['war']['3']}}
+                    </div>
+                    <div id="arc">
+                        Archer
+                        {{army['arc']['1']}}
+                        {{army['arc']['2']}}
+                        {{army['arc']['3']}}
+                    </div>
+                    <div id="mine">
+                        Mine
+                        {{mine['worker']}}
+                    </div>
+                    <div id="trainCenter">
+                        Train Center
+                        {{trainCenter['lvl']}}
+                        {{trainCenter['training']}}
+                        <div v-for="p in trainCenter['queue']">
+                            {{p.type}} : {{p.number}}
+                        </div>
+                    </div>
+                    <div>
+                        Warrior <input type="number" id="warNumber" value="0" :min="0" :max="army['war']['1']">
+                        Arc <input type="number" id="arcNumber" value="0" :min="0" :max="army['arc']['1']">
+                        <button @click.prevent="attack">Move/Attack</button>
+                    </div>
+                </div>
+                <div>
+                    <button>OK</button>
+                    <button @click.prevent="cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=&libraries=geometry,drawing"></script>
+    <script src="js/jquery.slim.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+
+        // ====================================================================
+        // Firebase
+        // ====================================================================
+
+        firebase.initializeApp({
+            projectId: 'civilazation-443d8'
+        });
+
+        // firesotre
+        const ref = firebase.firestore().collection('map');
+        let ap = null;
+
+        $(document).mousedown(function (e) {
+            if (e.which == 3) {
+                vm.startWarStat = false;
+            }
+        });
+
+        // ====================================================================
+        // Vue
+        // ====================================================================
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                tempColor:'',
+                player: 'abc',
+                type: 'polygon',
+                shapes: [],
+                encoded: [],
+                id: 0,
+                owner: null,
+                startWarStat: false,
+                tempArmy: [],
+                wars: [],
+                // {attack:,war:,arc:,def:,distance:}
+                money: 0,
+                army: {
+                    // Is better store it like this
+                    /*
+                    army:[
+                        {type:'warrior',level:1,number:5},
+                        {type:'archer',level:2,number:5}
+                    ]
+                    */
+                    war: {
+                        1: 0,
+                        2: 0,
+                        3: 0
+                    },
+                    arc: {
+                        1: 0,
+                        2: 0,
+                        3: 0
+                    }
+                },
+                mine: {
+                    worker: 0
+                },
+                trainCenter: {
+                    lvl: 0,
+                    training: 'war3',
+                    quantity: 0,
+                    //{type:'warrior',level:1,number:5}
+                    queue: []
+                }
+            },
+            watch: {
+                startWarStat(val) {
+                    if (val)
+                        map.setOptions({ draggableCursor: 'crosshair' });
+                    // $('map').css({'cursor': 'url(image/attack.png), default'});
+                    else
+                        map.setOptions({ draggableCursor: '' });
+
+                    // $('map').css({'cursor': 'default'});
+                    console.log(val);
+                }
+            },
+            methods: {
+                count(type) {
+                    // TODO(5): Return the count of a particular type of shapes
+                    return this.shapes.filter(f => f.type == type).length;
+                },
+                remove(type) {
+                    // TODO(6): Remove a particular type of shapes
+                    vm.shapes.filter(s => s.type == type).forEach(s => s.setMap(null));
+                    vm.shapes = vm.shapes.filter(s => s.type != type);
+                },
+                save() {
+                    this.encoded.forEach(f => {
+                        ref.doc(f.id + '').set({
+                            position: f.position
+                        });
+
+                    });
+                },
+                load() {
+                    ref.get().then(doc => {
+                        doc.forEach(a => {
+                            let path = gm.geometry.encoding.decodePath(a.data().position);
+                            p = setPolygon(path);
+                            p.id = a.id;
+                            vm.shapes.push(p);
+                            ap = p;
+                        });
+                    })
+                },
+                attack() {
+                    let warrior = $('#warNumber').val();
+                    let archer = $('#acrNumber').val();
+
+                    this.tempArmy.push({ type: 'warrior', number: warrior }, { type: 'archer', number: archer });
+                    this.startWarStat = true;
+                    // Make the marker click, then check the status of the 
+                },
+                submit() {
+                    info.close();
+
+                }, cancel() {
+                    info.close();
+                },
+                change() {
+                    // let object = this.shapes.filters(p=>p.id == 1);
+                    this.shapes.forEach(p => {
+                        if (p.id % 2 == 0) {
+                            p['army']['war']['1'] += 5;
+                        }
+                    });
+
+                    // object['army']['war']['1'] += 5;
+                }
+            }
+        });
+
+
+
+        // ====================================================================
+        // Google Maps
+        // ====================================================================
+        // 6.743516, 99.926795
+        const gm = google.maps;
+        const center = { lat: 3.215000, lng: 101.730000 };
+        // const center = { lat: 6.743516, lng: 99.926795 };
+        const info = new gm.InfoWindow({
+            content: $('#info')[0]
+        });
+        const map = new gm.Map($('#map')[0], {
+            center,
+            zoom: 10,
+            minZoom: 5,
+            maxZoom: 15,
+            disableDefaultUI: true,
+            disableDoubleClickZoom: true,
+            clickableIcons: false
+        });
+        // map.data.loadGeoJson('selangor.txt');
+
+
+
+
+        map.addListener('rightclick', e => {
+
+            let lat = 3.799088;
+            let lng = 100.928715;
+
+            let ids = 1;
+            for (var j = 1; j <= 31; j++) {
+                if (j != 1) lat -= 0.039;
+
+                lng = j % 2 == 0 ? 100.928715 : 100.928715 - 0.135 / 2;
+                //90
+                for (var i = 1; i <= 9; i++) {
+                    const point = new gm.LatLng(lat, lng)
+
+                    if (gm.geometry.poly.containsLocation(point, poly)) {
+                        const s = drawPolygon(point);
+
+                        const arr = s.getPath().getArray();
+                        vm.encoded.push({ id: ids, position: gm.geometry.encoding.encodePath(arr) });
+                        s.id = ids;
+                        ids += 1;
+
+
+                        var bounds = new google.maps.LatLngBounds();
+                        var polygonBounds = s.getPath();
+                        var coordinates = [];
+                        for (var k = 0; k < polygonBounds.length; k++) {
+                            coordinates.push(new google.maps.LatLng(polygonBounds.getAt(k).lat(), polygonBounds.getAt(k).lng()));
+                        }
+                        for (var k = 0; k < coordinates.length; k++) {
+                            bounds.extend(coordinates[k]);
+                        }
+                        let p = createMarker(s.id, new gm.LatLng(bounds.getCenter().lat(), bounds.getCenter().lng()))
+
+                        s.addListener('click', e => {
+                            // s.setMap(null);
+                            // const i = vm.shapes.indexOf(s);
+                            // vm.shapes.splice(i, 1);
+                            if (vm.startWarStat && s.owner == vm.player) { // Move army
+                                // s.money = 0;
+                                $('#map').removeClass('attack');
+                                vm.startWarStat = false;
+                            } else if (vm.startWarStat && s.owner != vm.player) { // start war
+                                // s.money = 0;
+                                vm.startWarStat = false;
+                                $('#map').removeClass('attack');
+                            } else if(vm.startWarStat && s.owner == null){
+                                vm.startWarStat = false;
+                                $('#map').removeClass('attack');
+                            }
+                            else {
+                                vm.id = s.id;
+                                vm.money = s.money;
+                                vm.army = s.army;
+                                vm.mine = s.mine;
+                                vm.trainCenter = s.trainCenter;
+
+                                info.open(map, p);
+                            }
+
+                        });
+                        s.addListener('mouseover',e=>{
+                            
+
+                            if(vm.startWarStat){
+                                $('#map').addClass('attack');
+                            }
+                            else{
+                                // s.setOptions({icon:''});
+                                $('#map').removeClass('attack');
+                            }
+                        });
+                        s.addListener('mouseout',e=>{
+                            $('#map').removeClass('attack');
+                            // console.log('asd');
+                            // s.setOptions({clickableIcons:url('image/attack.png')});
+                            // s.setOptions({clickableIcons:url('image/attack.png')});
+                        });
+                        s.addListener('rightclick', e => {
+                            s.owner = 'abc';
+                            vm.id = s.id;
+                            vm.owner = s.owner;
+                            vm.money = s.money;
+                            vm.army = s.army;
+                            vm.mine = s.mine;
+                            vm.trainCenter = s.trainCenter;
+
+                            info.open(map, p);
+                        });
+                        vm.shapes.push(s);
+                    }
+                    lng += 0.135;
+                }
+            }
+        });
+
+        function drawPolygon(p) {
+            // TODO(4): Draw polygon
+            let p1 = gm.geometry.spherical.computeOffset(p, 5000, 30);
+            let p2 = gm.geometry.spherical.computeOffset(p, 5000, 90);
+            let p3 = gm.geometry.spherical.computeOffset(p, 5000, 150);
+            let p4 = gm.geometry.spherical.computeOffset(p, 5000, 210);
+            let p5 = gm.geometry.spherical.computeOffset(p, 5000, 270);
+            let p6 = gm.geometry.spherical.computeOffset(p, 5000, 330);
+
+            let s = new gm.Polygon({
+                map,
+                path: [p1, p2, p3, p4, p5, p6],
+                strokeColor: '#999999',
+                fillColor: '#999999',
+                draggable: false,
+                type: 'polygon',
+                money: Math.round(Math.random() * 100),
+                owner: null,
+                army: {
+                    war: {
+                        1: Math.round(Math.random() * 5),
+                        2: Math.round(Math.random() * 5),
+                        3: Math.round(Math.random() * 5)
+                    },
+                    arc: {
+                        1: Math.round(Math.random() * 5),
+                        2: Math.round(Math.random() * 5),
+                        3: Math.round(Math.random() * 5)
+                    }
+                },
+                mine: {
+                    worker: Math.round(Math.random() * 5)
+                },
+                trainCenter: {
+                    lvl: 0,
+                    training: 'war3',
+                    quantity: Math.round(Math.random() * 5),
+                    queue: [
+                        { type: 'archer', lvl: 1, number: Math.round(Math.random() * 5) }, { type: 'warrior', lvl: 2, number: Math.round(Math.random() * 5) }
+                    ]
+                },
+            });
+            return s;
+        }
+
+        const poly = new gm.Polygon({
+            map,
+            strokeColor: 'blue',
+            fillColor: 'blue',
+            clickable:false,
+            
+        });
+
+        let tempArray = []
+        fetch('selangor.txt').then(f =>
+            f.json()
+        ).then(a => {
+            a.coordinate.forEach(b => {
+                tempArray.push({ lat: b[1], lng: b[0] });
+            })
+        }).then(() => {
+            poly.setPath(tempArray);
+            
+        });
+
+        function setPolygon(path) {
+            // Create a new polygon based on the path given
+            let s = new gm.Polygon({
+                map,
+                path: path,
+                strokeColor: 'orange',
+                fillColor: 'orange',
+                draggable: false,
+                type: 'polygon'
+            });
+            return s;
+        }
+
+        function createMarker(id, position) {
+            
+            let m = new gm.Marker({
+                position,
+                map,
+                draggable: false,
+                id,
+                label: { fontWeight: 'bold', fontSize: '20px', text: id.toString() }
+            });
+            m.addListener('click', e => {
+                vm.shapes.forEach(shape => {
+                    if (shape.id == m.id) {
+                        vm.owner = shape.owner;
+                        vm.id = shape.id;
+                        vm.money = shape.money;
+                        vm.army = shape.army;
+                        vm.mine = shape.mine;
+                        vm.trainCenter = shape.trainCenter;
+                    }
+                });
+
+                info.open(map, m);
+            });
+            return m;
+        }
+
+    </script>
+</body>
+
+</html>
